@@ -16,3 +16,4 @@ app.use("/api/parlays", parlayRoutes);
 
 const PORT = process.env.port || 5001;
 app.listen(PORT, () => console.log('Server running on port ${PORT}'));
+//npx nodemon server.js test locally

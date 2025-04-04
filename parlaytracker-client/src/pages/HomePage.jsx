@@ -10,6 +10,8 @@ const HomePage = () => {
         num_legs: "",
         win: "true",
     });
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [parlayToUpdate, setParlayToUpdate] = useState(null);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
@@ -128,9 +130,24 @@ const HomePage = () => {
                     "Content-Type": "application/json",
                     Authorization: token,
                 },
+                body: JSON.stringify({
+                    //fill req body with results frm update form
+                    ...parlayToUpdate, //convert formdata to json and send it in body
+                    //backend receive thru req.body
+                    win: parlayToUpdate.win === "true", //ensure win is boolean
+                    //make popup to 
+                }),
             });
-        } catch (error) {
 
+            if (!response.ok) {
+                throw new Error("Failed to update parlay");
+            }
+            setIsUpdating(false);
+            setParlayToUpdate(null);
+            fetchParlays();
+        } catch (error) {
+            console.error("Error updating parlay:", error);
+            alert("Error updating parlay");
         }
     };
 
@@ -194,6 +211,7 @@ const HomePage = () => {
                     </div>
                 </div>
             )}
+
 
 
             <h3>Your Parlays</h3>

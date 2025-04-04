@@ -1,6 +1,6 @@
 const pool = require("../config/db");
 
-const createUserTable = async () => {
+const createUserTable = async () => {//must be created before parlay table
     const query = `
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,

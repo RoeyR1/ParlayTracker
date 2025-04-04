@@ -2,7 +2,7 @@ const pool = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-//Regist new user
+//Register new user
 exports.register = async (req, res) => {
     const { username, email, password } = req.body; //get user data from req
     try {
@@ -17,7 +17,7 @@ exports.register = async (req, res) => {
     }
 };
 
-//lgoin user
+//login user
 exports.login = async (req, res) => {
     const { email, password } = req.body; // get email and pass from login req
     try {
