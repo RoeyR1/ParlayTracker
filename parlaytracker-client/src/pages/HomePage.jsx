@@ -119,6 +119,21 @@ const HomePage = () => {
         }
     };
 
+    const handleUpdate = async (id) => {
+        const token = localStorage.getItem("token");
+        try {
+            const response = await fetch(`http://localhost:5001/api/parlays/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: token,
+                },
+            });
+        } catch (error) {
+
+        }
+    };
+
 
 
     return (
@@ -138,7 +153,6 @@ const HomePage = () => {
                                 name="date"
                                 value={formData.date}
                                 onChange={handleInputChange}
-                                className="p-2 border rounded"
                                 required
                             />
                             <input
@@ -147,7 +161,6 @@ const HomePage = () => {
                                 value={formData.money_spent}
                                 onChange={handleInputChange}
                                 placeholder="Money Spent"
-                                className="p-2 border rounded"
                                 required
                             />
                             <input
@@ -156,14 +169,12 @@ const HomePage = () => {
                                 value={formData.num_legs}
                                 onChange={handleInputChange}
                                 placeholder="Number of Legs"
-                                className="p-2 border rounded"
                                 required
                             />
                             <select
                                 name="win"
                                 value={formData.win}
                                 onChange={handleInputChange}
-                                className="p-2 border rounded"
                             >
                                 <option value="true">Win</option>
                                 <option value="false">Loss</option>
@@ -174,7 +185,6 @@ const HomePage = () => {
                             </button>
                         </form>
 
-                        {/* Close Button */}
                         <button
                             onClick={() => setIsModalOpen(false)}
                             className="mt-4 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
