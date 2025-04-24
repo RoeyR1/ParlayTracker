@@ -12,7 +12,7 @@ const UpdatePopup = ({ isOpen, onClose, children }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md mx-auto p-6 relative">
                 {/* Close button */}
                 <button

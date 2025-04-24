@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UpdatePopup from '../components/UpdatePopup';
 
+
 const HomePage = () => {
     const [parlays, setParlays] = useState([]);
     const [formData, setFormData] = useState({
@@ -14,6 +15,47 @@ const HomePage = () => {
     const [isUpdatePopupOpen, setIsUpdatePopupOpen] = useState(false);
     const [parlayToUpdate, setParlayToUpdate] = useState(null);
     const navigate = useNavigate();
+
+    const totalWins = parlays.filter(p => p.win).length;
+    const winRate = ((totalWins / parlays.length) * 100).toFixed(1);
+
+    const avgLegsPerWin = (
+        parlays.filter(p => p.win).reduce((acc, p) => acc + p.num_legs, 0) / totalWins || 0
+    ).toFixed(1);
+
+    const totalSpent = parlays.reduce((acc, p) => acc + Number(p.money_spent), 0).toFixed(2);
+
+
+    const getMultiplier = (legs) => {
+        switch (Number(legs)) {
+            case 2: return 3;
+            case 3: return 5;
+            case 4: return 10;
+            case 5: return 19.5;
+            case 6: return 36.5;
+            default: return 1; // No multiplier for invalid leg count
+        }
+    };
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+        return date.toLocaleDateString('en-US', options);
+    }
+
+
+
+
+    const totalPL = parlays.reduce((acc, p) => {
+        const amount = Number(p.money_spent);
+        const multiplier = getMultiplier(p.num_legs);
+
+        if (p.win) {
+            return acc + (amount * multiplier - amount); // profit = winnings - stake
+        } else {
+            return acc - amount; // total loss
+        }
+    }, 0).toFixed(2);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -177,7 +219,7 @@ const HomePage = () => {
 
             {/* Add Parlay Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md mx-auto p-6 relative">
                         <button
                             onClick={() => setIsModalOpen(false)}
@@ -245,38 +287,78 @@ const HomePage = () => {
                 </div>
             )}
 
-            {/* Parlays List */}
-            <h3 className="text-xl font-semibold mb-4">Your Parlays</h3>
-            <div className="grid gap-4">
-                {parlays.map((parlay) => (
-                    <div key={parlay.id} className="p-4 border rounded-lg dark:border-gray-700">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="font-medium">Date: {parlay.date}</p>
-                                <p>Spent: ${parlay.money_spent}</p>
-                                <p>Legs: {parlay.num_legs}</p>
-                                <p className={parlay.win ? "text-green-500" : "text-red-500"}>
-                                    {parlay.win ? "Win" : "Loss"}
-                                </p>
+            <div className="flex">
+                {/* Parlays List (Left Side) */}
+                <div className="w-full max-w-[50%]">
+                    <h3 className="text-xl font-semibold mb-4">Your Parlays</h3>
+                    <div className="grid gap-4">
+                        {parlays.map((parlay) => (
+                            <div
+                                key={parlay.id}
+                                className="p-4 border rounded-lg dark:border-gray-700 flex flex-col justify-between"
+                            >
+                                {/* Top Info Section */}
+                                <div>
+                                    <p className="font-medium">Date: {formatDate(parlay.date)}</p>
+                                    <p>Spent: ${parlay.money_spent}</p>
+                                    <p>
+                                        <span className="font-medium">Legs: {parlay.num_legs}  </span>
+                                        <span className="text-sm text-gray-500">
+                                            Multiplier: {getMultiplier(parlay.num_legs)}x
+                                        </span>
+                                    </p>
+                                    <p className={parlay.win ? "text-green-500" : "text-red-500"}>
+                                        {parlay.win ? "Win" : "Loss"}
+                                    </p>
+                                </div>
+
+                                {/* Buttons at Bottom */}
+                                <div className=" justify-bottom space-x-2 mb-0">
+                                    <button
+                                        onClick={() => handleEditClick(parlay)}
+                                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    >
+                                        Edit
+                                </button>
+                                    <button
+                                        onClick={() => handleRemove(parlay.id)}
+                                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                                    >
+                                        Remove
+                                </button>
+                                </div>
                             </div>
-                            <div className="flex space-x-2">
-                                <button
-                                    onClick={() => handleEditClick(parlay)}
-                                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    onClick={() => handleRemove(parlay.id)}
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                                >
-                                    Remove
-                                </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="w-full md:w-1/2">
+                    <h3 className="text-xl font-semibold mb-4">Parlay Stats</h3>
+                    <div className="space-y-4">
+                        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                            <p className="font-medium text-gray-700 dark:text-gray-200">Win Rate</p>
+                            <p className="text-2xl">{winRate}%</p>
+                        </div>
+                        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                            <p className="font-medium text-gray-700 dark:text-gray-200">Avg Legs / Win
+                            </p>
+                            <p className="text-2xl">{avgLegsPerWin}</p>
+                        </div>
+                        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                            <div className="flex justify-start items-start">
+                                <div>
+                                    <p className="font-medium text-gray-700 dark:text-gray-200">Total Money Spent</p>
+                                    <p className="text-2xl">${totalSpent}   </p>
+                                    <p className="font-medium text-gray-700 dark:text-gray-200">Total Profit/Loss</p>
+                                    <p className="text-2xl">${totalPL}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                ))}
+                </div>
+
             </div>
+
 
 
 
