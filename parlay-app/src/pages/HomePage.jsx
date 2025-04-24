@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UpdatePopup from '../components/UpdatePopup';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 
 const HomePage = () => {
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#845EC2'];
     const [parlays, setParlays] = useState([]);
     const [formData, setFormData] = useState({
         date: "",
@@ -43,6 +45,28 @@ const HomePage = () => {
         return date.toLocaleDateString('en-US', options);
     }
 
+    const legCounts = parlays.reduce((acc, { num_legs }) => {
+        acc[num_legs] = (acc[num_legs] || 0) + 1;
+        return acc;
+    }, {});
+
+    const legsPieData = Object.entries(legCounts).map(([legs, count]) => ({
+        name: `${legs} Legs`,
+        value: count
+    }));
+
+    const winLossCounts = parlays.reduce(
+        (acc, { win }) => {
+            win ? acc.wins++ : acc.losses++;
+            return acc;
+        },
+        { wins: 0, losses: 0 }
+    );
+
+    const winLossPieData = [
+        { name: 'Wins', value: winLossCounts.wins },
+        { name: 'Losses', value: winLossCounts.losses }
+    ];
 
 
 
@@ -163,6 +187,61 @@ const HomePage = () => {
         });
         setIsUpdatePopupOpen(true);
     };
+
+    function ParlayLegsPieChart({ data }) {
+        return (
+            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow w-full max-w-md mx-auto">
+                <h2 className="text-xl font-semibold text-center mb-4 text-gray-700 dark:text-gray-200">
+                    Legs Breakdown
+        </h2>
+                <PieChart width={300} height={300}>
+                    <Pie
+                        data={data}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label
+                        dataKey="value"
+                    >
+                        {data.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                </PieChart>
+            </div>
+        );
+    }
+
+
+    function WinLossPieChart({ data }) {
+        const COLORS = ['#00C49F', '#FF6B6B'];
+
+        return (
+            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow w-full max-w-md mx-auto">
+                <h2 className="text-xl font-semibold text-center mb-4 text-gray-700 dark:text-gray-200">
+                    W/L
+            </h2>
+                <PieChart width={300} height={300}>
+                    <Pie
+                        data={data}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label
+                        dataKey="value"
+                    >
+                        {data.map((entry, index) => (
+                            <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                </PieChart>
+            </div>
+        );
+    }
 
     const handleUpdate = async (updatedData) => {
         const token = localStorage.getItem("token");
@@ -308,24 +387,23 @@ const HomePage = () => {
                                         </span>
                                     </p>
                                     <p className={parlay.win ? "text-green-500" : "text-red-500"}>
-                                        {parlay.win ? "Win" : "Loss"}
-                                    </p>
-                                </div>
+                                        {parlay.win ? "Win  " : "Loss   "}
 
-                                {/* Buttons at Bottom */}
-                                <div className=" justify-bottom space-x-2 mb-0">
-                                    <button
-                                        onClick={() => handleEditClick(parlay)}
-                                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                    >
-                                        Edit
+
+
+                                        <button
+                                            onClick={() => handleEditClick(parlay)}
+                                            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                        >
+                                            Edit
                                 </button>
-                                    <button
-                                        onClick={() => handleRemove(parlay.id)}
-                                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                                    >
-                                        Remove
+                                        <button
+                                            onClick={() => handleRemove(parlay.id)}
+                                            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                                        >
+                                            Remove
                                 </button>
+                                    </p>
                                 </div>
                             </div>
                         ))}
@@ -355,6 +433,11 @@ const HomePage = () => {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div className="w-full md:w-1/2">
+                    <WinLossPieChart data={winLossPieData} />
+                    <ParlayLegsPieChart data={legsPieData} />
                 </div>
 
             </div>
