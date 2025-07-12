@@ -42,6 +42,9 @@ const HomePage = () => {
         dateFormat: "MM/DD/YYYY"
     });
     const [showInlineForm, setShowInlineForm] = useState(false);
+    const [legDistributionFilter, setLegDistributionFilter] = useState("all");
+    const [trendChartType, setTrendChartType] = useState("winRate");
+    const [selectedMonth, setSelectedMonth] = useState(null);
     const navigate = useNavigate();
 
 
@@ -218,14 +221,18 @@ const HomePage = () => {
     };
 
     const getChartData = () => {
-        // Monthly data for line chart
-        const monthlyData = parlays.reduce((acc, parlay) => {
+        // Sort parlays by date to ensure chronological order
+        const sortedParlays = [...parlays].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        // Group parlays by month
+        const monthlyData = sortedParlays.reduce((acc, parlay) => {
             const month = new Date(parlay.date).toLocaleString('default', { month: 'short', year: 'numeric' });
             if (!acc[month]) {
-                acc[month] = { month, wins: 0, losses: 0, spent: 0 };
+                acc[month] = { month, wins: 0, losses: 0, spent: 0, payout: 0 };
             }
             if (parlay.win) {
                 acc[month].wins++;
+                acc[month].payout += parseFloat(parlay.payout || 0);
             } else {
                 acc[month].losses++;
             }
@@ -233,15 +240,92 @@ const HomePage = () => {
             return acc;
         }, {});
 
-        return Object.values(monthlyData);
+        // Calculate cumulative win rate and profit over time
+        let cumulativeWins = 0;
+        let cumulativeLosses = 0;
+        let cumulativeSpent = 0;
+        let cumulativePayout = 0;
+
+        const chartData = Object.values(monthlyData).map(month => {
+            cumulativeWins += month.wins;
+            cumulativeLosses += month.losses;
+            cumulativeSpent += month.spent;
+            cumulativePayout += month.payout;
+
+            return {
+                ...month,
+                winRate: cumulativeWins + cumulativeLosses > 0 ? (cumulativeWins / (cumulativeWins + cumulativeLosses)) * 100 : 0,
+                cumulativeProfit: cumulativePayout - cumulativeSpent
+            };
+        });
+
+        return chartData;
     };
 
     const getPieData = () => {
-        const stats = calculateStats();
-        return [
-            { name: 'Wins', value: stats.totalWins, color: '#10b981' },
-            { name: 'Losses', value: parlays.length - stats.totalWins, color: '#ef4444' }
-        ];
+        // Filter parlays based on the selected filter
+        let filteredParlays = parlays;
+        if (legDistributionFilter === "wins") {
+            filteredParlays = parlays.filter(parlay => parlay.win);
+        } else if (legDistributionFilter === "losses") {
+            filteredParlays = parlays.filter(parlay => !parlay.win);
+        }
+
+        // Count the distribution of legs across filtered parlays
+        const legDistribution = filteredParlays.reduce((acc, parlay) => {
+            const numLegs = parseInt(parlay.num_legs) || 0;
+            if (numLegs > 0) {
+                acc[numLegs] = (acc[numLegs] || 0) + 1;
+            }
+            return acc;
+        }, {});
+
+        // Convert to array format for the pie chart
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
+
+        return Object.entries(legDistribution)
+            .sort(([a], [b]) => parseInt(a) - parseInt(b))
+            .map(([legs, count], index) => ({
+                name: `${legs} Leg${parseInt(legs) === 1 ? '' : 's'}`,
+                value: count,
+                color: colors[index % colors.length]
+            }));
+    };
+
+    const getAverageLegs = () => {
+        let filteredParlays = parlays;
+        if (legDistributionFilter === "wins") {
+            filteredParlays = parlays.filter(parlay => parlay.win);
+        } else if (legDistributionFilter === "losses") {
+            filteredParlays = parlays.filter(parlay => !parlay.win);
+        }
+
+        if (filteredParlays.length === 0) return 0;
+
+        const totalLegs = filteredParlays.reduce((sum, parlay) => sum + (parseInt(parlay.num_legs) || 0), 0);
+        return (totalLegs / filteredParlays.length).toFixed(1);
+    };
+
+    const getDailySpendingData = (month) => {
+        // Filter parlays for the specific month
+        const monthParlays = parlays.filter(parlay => {
+            const parlayMonth = new Date(parlay.date).toLocaleString('default', { month: 'short', year: 'numeric' });
+            return parlayMonth === month;
+        });
+
+        // Group by day
+        const dailyData = monthParlays.reduce((acc, parlay) => {
+            const day = new Date(parlay.date).getDate();
+            if (!acc[day]) {
+                acc[day] = { day, spent: 0, count: 0 };
+            }
+            acc[day].spent += parseFloat(parlay.money_spent || 0);
+            acc[day].count += 1;
+            return acc;
+        }, {});
+
+        // Convert to array and sort by day
+        return Object.values(dailyData).sort((a, b) => a.day - b.day);
     };
 
     // Load data on component mount
@@ -549,12 +633,27 @@ const HomePage = () => {
                     {/* Analytics Tab */}
                     <TabsContent value="analytics" className="space-y-6">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Win/Loss Pie Chart */}
+                            {/* Leg Distribution Pie Chart */}
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Win/Loss Distribution</CardTitle>
+                                    <div className="flex justify-between items-center">
+                                        <CardTitle>Leg Distribution</CardTitle>
+                                        <Select
+                                            value={legDistributionFilter}
+                                            onValueChange={setLegDistributionFilter}
+                                        >
+                                            <SelectTrigger className="w-32">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                                <SelectItem value="all" className="hover:bg-gray-100 cursor-pointer">All Parlays</SelectItem>
+                                                <SelectItem value="wins" className="hover:bg-gray-100 cursor-pointer">Wins Only</SelectItem>
+                                                <SelectItem value="losses" className="hover:bg-gray-100 cursor-pointer">Losses Only</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="relative">
                                     <ResponsiveContainer width="100%" height={300}>
                                         <PieChart>
                                             <Pie
@@ -562,7 +661,7 @@ const HomePage = () => {
                                                 cx="50%"
                                                 cy="50%"
                                                 labelLine={false}
-                                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                                                 outerRadius={80}
                                                 fill="#8884d8"
                                                 dataKey="value"
@@ -571,47 +670,137 @@ const HomePage = () => {
                                                     <Cell key={`cell-${index}`} fill={entry.color} />
                                                 ))}
                                             </Pie>
-                                            <Tooltip />
+                                            <Tooltip formatter={(value, name) => [`${name}: ${value} parlays`]} />
                                         </PieChart>
                                     </ResponsiveContainer>
+
+                                    {/* Average Legs Text */}
+                                    <div className="absolute bottom-0 left-0 p-4">
+                                        {legDistributionFilter === "all" && (
+                                            <p className="text-sm text-gray-600 font-medium">
+                                                Average Legs: {getAverageLegs()}
+                                            </p>
+                                        )}
+                                        {legDistributionFilter === "wins" && (
+                                            <p className="text-sm text-gray-600 font-medium">
+                                                Average Legs per Win: {getAverageLegs()}
+                                            </p>
+                                        )}
+                                        {legDistributionFilter === "losses" && (
+                                            <p className="text-sm text-gray-600 font-medium">
+                                                Average Legs per Loss: {getAverageLegs()}
+                                            </p>
+                                        )}
+                                    </div>
                                 </CardContent>
                             </Card>
 
-                            {/* Monthly spending */}
+                            {/* Monthly/Daily Spending Chart */}
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Monthly Spending</CardTitle>
+                                    <div className="flex justify-between items-center">
+                                        <CardTitle>
+                                            {selectedMonth ? `Daily Spending - ${selectedMonth}` : "Monthly Spending"}
+                                        </CardTitle>
+                                        {selectedMonth && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setSelectedMonth(null)}
+                                                className="flex items-center space-x-2"
+                                            >
+                                                <span>← Back</span>
+                                            </Button>
+                                        )}
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     <ResponsiveContainer width="100%" height={300}>
-                                        <BarChart data={chartData}>
+                                        <BarChart
+                                            data={selectedMonth ? getDailySpendingData(selectedMonth) : chartData}
+                                            onClick={(data) => {
+                                                if (!selectedMonth && data && data.activeLabel) {
+                                                    setSelectedMonth(data.activeLabel);
+                                                }
+                                            }}
+                                        >
                                             <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="month" />
+                                            <XAxis dataKey={selectedMonth ? "day" : "month"} />
                                             <YAxis />
                                             <Tooltip
                                                 formatter={(value) => [`Spent: ${formatCurrency(value)}`]}
+                                                labelFormatter={(label) => {
+                                                    if (selectedMonth) {
+                                                        // Extract month name from selectedMonth (e.g., "Jul 2025" -> "Jul")
+                                                        const monthName = selectedMonth.split(' ')[0];
+                                                        return `${monthName} ${label}`;
+                                                    }
+                                                    return label;
+                                                }}
                                             />
-                                            <Bar dataKey="spent" fill="#3b82f6" />
+                                            <Bar
+                                                dataKey="spent"
+                                                fill="#3b82f6"
+                                                style={{ cursor: selectedMonth ? 'default' : 'pointer' }}
+                                            />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </CardContent>
                             </Card>
 
-                            {/* Performance Trend */}
+                            {/* Combined Trend Chart */}
                             <Card className="lg:col-span-2">
                                 <CardHeader>
-                                    <CardTitle>Performance Trend</CardTitle>
+                                    <div className="flex justify-between items-center">
+                                        <CardTitle>
+                                            {trendChartType === "winRate" ? "Win Rate Trend" : "Profit Trend"}
+                                        </CardTitle>
+                                        <Select
+                                            value={trendChartType}
+                                            onValueChange={setTrendChartType}
+                                        >
+                                            <SelectTrigger className="w-32">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                                <SelectItem value="winRate" className="hover:bg-gray-100 cursor-pointer">Win Rate</SelectItem>
+                                                <SelectItem value="profit" className="hover:bg-gray-100 cursor-pointer">Profit</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     <ResponsiveContainer width="100%" height={300}>
                                         <LineChart data={chartData}>
                                             <CartesianGrid strokeDasharray="3 3" />
                                             <XAxis dataKey="month" />
-                                            <YAxis />
-                                            <Tooltip />
-                                            <Legend />
-                                            <Line type="monotone" dataKey="wins" stroke="#10b981" strokeWidth={2} />
-                                            <Line type="monotone" dataKey="losses" stroke="#ef4444" strokeWidth={2} />
+                                            <YAxis
+                                                domain={trendChartType === "winRate" ? [0, 100] : undefined}
+                                            />
+                                            <Tooltip
+                                                formatter={(value, name, props) => {
+                                                    const currentMonth = props.payload.month;
+                                                    const firstMonth = chartData[0]?.month;
+                                                    const dateRange = firstMonth === currentMonth ? currentMonth : `${firstMonth} - ${currentMonth}`;
+                                                    const label = trendChartType === "winRate" ? 'Win Rate' : 'Cumulative Profit';
+                                                    const formattedValue = trendChartType === "winRate"
+                                                        ? `${value.toFixed(1)}%`
+                                                        : formatCurrency(value);
+
+                                                    return [
+                                                        <div>
+                                                            <div>{dateRange}</div>
+                                                            <div>{label}: {formattedValue}</div>
+                                                        </div>
+                                                    ];
+                                                }}
+                                            />
+                                            <Line
+                                                type="monotone"
+                                                dataKey={trendChartType === "winRate" ? "winRate" : "cumulativeProfit"}
+                                                stroke={trendChartType === "winRate" ? "#10b981" : "#3b82f6"}
+                                                strokeWidth={3}
+                                            />
                                         </LineChart>
                                     </ResponsiveContainer>
                                 </CardContent>
