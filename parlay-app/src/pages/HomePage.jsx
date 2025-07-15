@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -347,7 +347,6 @@ const HomePage = () => {
 
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
             {/* Header */}
-            <div className="text-blue-500">Test</div>
             <header className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
@@ -513,12 +512,12 @@ const HomePage = () => {
                                                 value={formData.win}
                                                 onValueChange={(value) => setFormData({ ...formData, win: value })}
                                             >
-                                                <SelectTrigger>
+                                                <SelectTrigger id="win">
                                                     <SelectValue />
                                                 </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="true">Win</SelectItem>
-                                                    <SelectItem value="false">Loss</SelectItem>
+                                                <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                                    <SelectItem value="true" className="hover:bg-gray-100 cursor-pointer">Win</SelectItem>
+                                                    <SelectItem value="false" className="hover:bg-gray-100 cursor-pointer">Loss</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -821,7 +820,7 @@ const HomePage = () => {
                                         value={settings.currency}
                                         onValueChange={(value) => setSettings({ ...settings, currency: value })}
                                     >
-                                        <SelectTrigger className="w-full">
+                                        <SelectTrigger id="currency">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -840,7 +839,7 @@ const HomePage = () => {
                                         value={settings.theme}
                                         onValueChange={(value) => setSettings({ ...settings, theme: value })}
                                     >
-                                        <SelectTrigger className="w-full">
+                                        <SelectTrigger id="theme">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -859,7 +858,7 @@ const HomePage = () => {
                                         value={settings.dateFormat}
                                         onValueChange={(value) => setSettings({ ...settings, dateFormat: value })}
                                     >
-                                        <SelectTrigger className="w-full">
+                                        <SelectTrigger id="dateFormat">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -882,6 +881,9 @@ const HomePage = () => {
                     <DialogContent className="bg-white p-6 rounded-lg">
                         <DialogHeader>
                             <DialogTitle>Edit Parlay</DialogTitle>
+                            <DialogDescription>
+                                Update the details of your selected parlay below. Change any field and click Save to update.
+                            </DialogDescription>
                         </DialogHeader>
                         {parlayToUpdate && (
                             <form
