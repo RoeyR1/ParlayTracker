@@ -26,7 +26,7 @@ const LoginPage = () => {
 
     return (
         <div className="login-page">
-            <h2>Welcome to ParlayPal</h2>
+            <h2>Welcome to your Parlay Tracker!</h2>
             <p>Sign in with Google to continue</p>
             <GoogleLogin
                 onSuccess={handleGoogleLogin}
