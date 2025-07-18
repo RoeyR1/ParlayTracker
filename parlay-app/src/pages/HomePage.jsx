@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Trash2, Edit, TrendingUp, TrendingDown, DollarSign, Target, Calendar, Settings, LogOut, Plus, BarChart3 } from 'lucide-react';
+import { Trash2, Edit, TrendingUp, TrendingDown, DollarSign, Target, Calendar, LogOut, Plus, BarChart3 } from 'lucide-react';
 import { toast } from "sonner";
 /*
 TODOS:
@@ -36,15 +36,11 @@ const HomePage = () => {
     const [isUpdatePopupOpen, setIsUpdatePopupOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("parlays");
-    const [settings, setSettings] = useState({
-        currency: "USD",
-        theme: "light",
-        dateFormat: "MM/DD/YYYY"
-    });
     const [showInlineForm, setShowInlineForm] = useState(false);
     const [legDistributionFilter, setLegDistributionFilter] = useState("all");
     const [trendChartType, setTrendChartType] = useState("winRate");
     const [selectedMonth, setSelectedMonth] = useState(null);
+    const [showAllParlays, setShowAllParlays] = useState(false);
     const navigate = useNavigate();
 
 
@@ -337,10 +333,10 @@ const HomePage = () => {
     const stats = calculateStats();
     const chartData = getChartData();
     const pieData = getPieData();
+    const parlaysToShow = showAllParlays ? parlays : parlays.slice(0, 5);
 
     const formatCurrency = (amount) => {
-        const currencySymbols = { USD: '$', EUR: '€', GBP: '£' };
-        return `${currencySymbols[settings.currency] || '$'}${amount.toFixed(2)}`;
+        return `$${amount.toFixed(2)}`;
     };
 
     return (
@@ -361,7 +357,7 @@ const HomePage = () => {
                         <Button
                             variant="outline"
                             onClick={handleLogout}
-                            className="flex items-center space-x-2"
+                            className="flex items-center space-x-2 hover:bg-gray-200"
                         >
                             <LogOut className="h-4 w-4" />
                             <span>Logout</span>
@@ -372,7 +368,7 @@ const HomePage = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 mb-8">
+                    <TabsList className="grid w-full grid-cols-2 mb-8">
                         <TabsTrigger value="parlays" className="flex items-center space-x-2">
                             <Target className="h-4 w-4" />
                             <span>Parlays</span>
@@ -380,10 +376,6 @@ const HomePage = () => {
                         <TabsTrigger value="analytics" className="flex items-center space-x-2">
                             <BarChart3 className="h-4 w-4" />
                             <span>Analytics</span>
-                        </TabsTrigger>
-                        <TabsTrigger value="settings" className="flex items-center space-x-2">
-                            <Settings className="h-4 w-4" />
-                            <span>Settings</span>
                         </TabsTrigger>
                     </TabsList>
 
@@ -395,7 +387,7 @@ const HomePage = () => {
                                 <CardContent className="p-6">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-blue-100">Total Spent</p>
+                                            <p className="text-blue-100">Total Risked</p>
                                             <p className="text-2xl font-bold">{formatCurrency(stats.totalSpent)}</p>
                                         </div>
                                         <DollarSign className="h-8 w-8 text-blue-200" />
@@ -483,7 +475,7 @@ const HomePage = () => {
                                             />
                                         </div>
                                         <div>
-                                            <Label htmlFor="money_spent">Amount ({settings.currency})</Label>
+                                            <Label htmlFor="money_spent">Amount (USD)</Label>
                                             <Input
                                                 type="number"
                                                 step="0.01"
@@ -524,7 +516,7 @@ const HomePage = () => {
                                         <div className="flex flex-col justify-end">
                                             {formData.win === "true" ? (
                                                 <>
-                                                    <Label htmlFor="payout">Payout ({settings.currency})</Label>
+                                                    <Label htmlFor="payout">Payout (USD)</Label>
                                                     <Input
                                                         type="number"
                                                         step="0.01"
@@ -565,13 +557,13 @@ const HomePage = () => {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-4">
-                                        {parlays.length === 0 ? (
+                                        {parlaysToShow.length === 0 ? (
                                             <div className="text-center py-8 text-gray-500">
                                                 <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                                                 <p>No parlays yet. Add your first parlay above!</p>
                                             </div>
                                         ) : (
-                                            parlays.map((parlay) => (
+                                            parlaysToShow.map((parlay) => (
                                                 <div key={parlay.id} className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
                                                     <div className="flex justify-between items-start">
                                                         <div className="flex-1">
@@ -622,6 +614,17 @@ const HomePage = () => {
                                                     </div>
                                                 </div>
                                             ))
+                                        )}
+                                        {parlays.length > 5 && (
+                                            <div className="flex justify-center">
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => setShowAllParlays(!showAllParlays)}
+                                                    className="mt-4 hover:bg-gray-200"
+                                                >
+                                                    {showAllParlays ? "Show Less" : "Show All"}
+                                                </Button>
+                                            </div>
                                         )}
                                     </div>
                                 </CardContent>
@@ -699,14 +702,14 @@ const HomePage = () => {
                                 <CardHeader>
                                     <div className="flex justify-between items-center">
                                         <CardTitle>
-                                            {selectedMonth ? `Daily Spending - ${selectedMonth}` : "Monthly Spending"}
+                                            {selectedMonth ? `Daily Risked - ${selectedMonth}` : "Monthly Risked"}
                                         </CardTitle>
                                         {selectedMonth && (
                                             <Button
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => setSelectedMonth(null)}
-                                                className="flex items-center space-x-2"
+                                                className="flex items-center space-x-2 hover:bg-gray-200"
                                             >
                                                 <span>← Back</span>
                                             </Button>
@@ -727,7 +730,7 @@ const HomePage = () => {
                                             <XAxis dataKey={selectedMonth ? "day" : "month"} />
                                             <YAxis />
                                             <Tooltip
-                                                formatter={(value) => [`Spent: ${formatCurrency(value)}`]}
+                                                formatter={(value) => [`Risked: ${formatCurrency(value)}`]}
                                                 labelFormatter={(label) => {
                                                     if (selectedMonth) {
                                                         // Extract month name from selectedMonth (e.g., "Jul 2025" -> "Jul")
@@ -806,73 +809,6 @@ const HomePage = () => {
                             </Card>
                         </div>
                     </TabsContent>
-
-                    {/* Settings Tab */}
-                    <TabsContent value="settings" className="space-y-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Preferences (COMING SOON)</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6 bg-white">
-                                <div>
-                                    <Label htmlFor="currency">Currency</Label>
-                                    <Select
-                                        value={settings.currency}
-                                        onValueChange={(value) => setSettings({ ...settings, currency: value })}
-                                    >
-                                        <SelectTrigger id="currency">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="USD">USD ($)</SelectItem>
-                                            <SelectItem value="EUR">EUR (€)</SelectItem>
-                                            <SelectItem value="GBP">GBP (£)</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <Separator />
-
-                                <div>
-                                    <Label htmlFor="theme">Theme</Label>
-                                    <Select
-                                        value={settings.theme}
-                                        onValueChange={(value) => setSettings({ ...settings, theme: value })}
-                                    >
-                                        <SelectTrigger id="theme">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="light">Light</SelectItem>
-                                            <SelectItem value="dark">Dark</SelectItem>
-                                            <SelectItem value="system">System</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <Separator />
-
-                                <div>
-                                    <Label htmlFor="dateFormat">Date Format</Label>
-                                    <Select
-                                        value={settings.dateFormat}
-                                        onValueChange={(value) => setSettings({ ...settings, dateFormat: value })}
-                                    >
-                                        <SelectTrigger id="dateFormat">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
-                                            <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
-                                            <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <Button className="w-full">Save Settings</Button>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
                 </Tabs>
 
                 {/* Update Parlay Modal */}
@@ -941,7 +877,7 @@ const HomePage = () => {
                                 </div>
                                 {parlayToUpdate?.win === "true" && (
                                     <div>
-                                        <Label htmlFor="update-payout">Payout ({settings.currency})</Label>
+                                        <Label htmlFor="update-payout">Payout (USD)</Label>
                                         <Input
                                             type="number"
                                             step="0.01"

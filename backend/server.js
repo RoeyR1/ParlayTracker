@@ -15,5 +15,5 @@ app.use("/api/auth", authRoutes);
 app.use("/api/parlays", parlayRoutes);
 
 const PORT = process.env.port || 5001;
-app.listen(PORT, () => console.log('Server running on port ${PORT}'));
-//npx nodemon server.js test locally
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+//npm run server to run with nodemon
