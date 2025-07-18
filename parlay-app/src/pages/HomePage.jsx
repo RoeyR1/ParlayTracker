@@ -341,11 +341,15 @@ const HomePage = () => {
 
     return (
 
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="relative min-h-screen overflow-hidden">
+            {/* Gradient background */}
+            <div className="absolute inset-0 -z-10">
+                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500" />
+            </div>
             {/* Header */}
             <header className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-16">
+                    <div className="flex justify-between items-center h-12">
                         <div className="flex items-center space-x-3">
                             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
                                 <Target className="h-6 w-6 text-white" />
@@ -366,9 +370,9 @@ const HomePage = () => {
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 mb-8">
+                    <TabsList className="grid w-full grid-cols-2 mb-4 bg-white">
                         <TabsTrigger value="parlays" className="flex items-center space-x-2">
                             <Target className="h-4 w-4" />
                             <span>Parlays</span>
@@ -381,262 +385,264 @@ const HomePage = () => {
 
                     {/* Parlays Tab */}
                     <TabsContent value="parlays" className="space-y-6">
-                        {/* Quick Stats */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-blue-100">Total Risked</p>
-                                            <p className="text-2xl font-bold">{formatCurrency(stats.totalSpent)}</p>
-                                        </div>
-                                        <DollarSign className="h-8 w-8 text-blue-200" />
-                                    </div>
-                                </CardContent>
-                            </Card>
+                        <Card className="bg-white border-0 shadow-lg mb-8">
+                            <CardContent className="pt-4 pb-4 px-6 space-y-4">
+                                {/* Quick Stats */}
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                                        <CardContent className="p-6">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-blue-100">Total Risked</p>
+                                                    <p className="text-2xl font-bold">{formatCurrency(stats.totalSpent)}</p>
+                                                </div>
+                                                <DollarSign className="h-8 w-8 text-blue-200" />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
 
-                            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-green-100">Win Rate</p>
-                                            <p className="text-2xl font-bold">{stats.winRate.toFixed(1)}%</p>
-                                        </div>
-                                        <TrendingUp className="h-8 w-8 text-green-200" />
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+                                        <CardContent className="p-6">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-green-100">Win Rate</p>
+                                                    <p className="text-2xl font-bold">{stats.winRate.toFixed(1)}%</p>
+                                                </div>
+                                                <TrendingUp className="h-8 w-8 text-green-200" />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
 
-                            <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-purple-100">Total Parlays</p>
-                                            <p className="text-2xl font-bold">{parlays.length}</p>
-                                        </div>
-                                        <Target className="h-8 w-8 text-purple-200" />
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+                                        <CardContent className="p-6">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-purple-100">Total Parlays</p>
+                                                    <p className="text-2xl font-bold">{parlays.length}</p>
+                                                </div>
+                                                <Target className="h-8 w-8 text-purple-200" />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
 
-                            <Card className={`bg-gradient-to-r ${stats.totalProfit >= 0 ? 'from-emerald-500 to-emerald-600' : 'from-red-500 to-red-600'} text-white`}>
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-white/80">Net Profit</p>
-                                            <p className="text-2xl font-bold">{formatCurrency(stats.totalProfit)}</p>
-                                        </div>
-                                        {stats.totalProfit >= 0 ?
-                                            <TrendingUp className="h-8 w-8 text-white/80" /> :
-                                            <TrendingDown className="h-8 w-8 text-white/80" />
-                                        }
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        {/* Add New Parlay Section */}
-                        <div className="space-y-4 flex justify-center">
-                            <div className="w-2/3">
-                                <div className="flex justify-start items-center mb-4">
-                                    <Button
-                                        onClick={() => setShowInlineForm(!showInlineForm)}
-                                        variant="default"
-                                        className={`flex items-center space-x-2 ${showInlineForm ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
-                                            }`}
-                                    >
-                                        {showInlineForm ? (
-                                            <>
-                                                <span>Cancel</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Plus className="h-4 w-4" />
-                                                <span>Add New Parlay</span>
-                                            </>
-                                        )}
-                                    </Button>
+                                    <Card className={`bg-gradient-to-r ${stats.totalProfit >= 0 ? 'from-emerald-500 to-emerald-600' : 'from-red-500 to-red-600'} text-white`}>
+                                        <CardContent className="p-6">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-white/80">Net Profit</p>
+                                                    <p className="text-2xl font-bold">{formatCurrency(stats.totalProfit)}</p>
+                                                </div>
+                                                {stats.totalProfit >= 0 ?
+                                                    <TrendingUp className="h-8 w-8 text-white/80" /> :
+                                                    <TrendingDown className="h-8 w-8 text-white/80" />
+                                                }
+                                            </div>
+                                        </CardContent>
+                                    </Card>
                                 </div>
 
-                                {showInlineForm && (
-                                    <form
-                                        onSubmit={handleSubmit}
-                                        className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-lg shadow-sm"
-                                    >
-                                        <div>
-                                            <Label htmlFor="date">Date</Label>
-                                            <Input
-                                                type="date"
-                                                id="date"
-                                                name="date"
-                                                value={formData.date}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="money_spent">Amount (USD)</Label>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                id="money_spent"
-                                                name="money_spent"
-                                                value={formData.money_spent}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="num_legs">Number of Legs</Label>
-                                            <Input
-                                                type="number"
-                                                id="num_legs"
-                                                name="num_legs"
-                                                value={formData.num_legs}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="win">Result</Label>
-                                            <Select
-                                                name="win"
-                                                value={formData.win}
-                                                onValueChange={(value) => setFormData({ ...formData, win: value })}
+                                {/* Add New Parlay Section */}
+                                <div className="space-y-4 flex justify-center mb-2">
+                                    <div className="w-2/3">
+                                        <div className="flex justify-start items-center mb-4">
+                                            <Button
+                                                onClick={() => setShowInlineForm(!showInlineForm)}
+                                                variant="default"
+                                                className={`flex items-center space-x-2 ${showInlineForm ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+                                                    }`}
                                             >
-                                                <SelectTrigger id="win">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                                                    <SelectItem value="true" className="hover:bg-gray-100 cursor-pointer">Win</SelectItem>
-                                                    <SelectItem value="false" className="hover:bg-gray-100 cursor-pointer">Loss</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                                {showInlineForm ? (
+                                                    <>
+                                                        <span>Cancel</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Plus className="h-4 w-4" />
+                                                        <span>Add New Parlay</span>
+                                                    </>
+                                                )}
+                                            </Button>
                                         </div>
-                                        <div className="flex flex-col justify-end">
-                                            {formData.win === "true" ? (
-                                                <>
-                                                    <Label htmlFor="payout">Payout (USD)</Label>
+
+                                        {showInlineForm && (
+                                            <form
+                                                onSubmit={handleSubmit}
+                                                className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-lg shadow-sm bg-white"
+                                            >
+                                                <div>
+                                                    <Label htmlFor="date">Date</Label>
+                                                    <Input
+                                                        type="date"
+                                                        id="date"
+                                                        name="date"
+                                                        value={formData.date}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="money_spent">Amount (USD)</Label>
                                                     <Input
                                                         type="number"
                                                         step="0.01"
-                                                        id="payout"
-                                                        name="payout"
-                                                        value={formData.payout}
+                                                        id="money_spent"
+                                                        name="money_spent"
+                                                        value={formData.money_spent}
                                                         onChange={handleInputChange}
-                                                        required={formData.win === "true"}
+                                                        required
                                                     />
-                                                    <Button
-                                                        type="submit"
-                                                        className="bg-green-500 hover:bg-green-600 mt-2"
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="num_legs">Number of Legs</Label>
+                                                    <Input
+                                                        type="number"
+                                                        id="num_legs"
+                                                        name="num_legs"
+                                                        value={formData.num_legs}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="win">Result</Label>
+                                                    <Select
+                                                        name="win"
+                                                        value={formData.win}
+                                                        onValueChange={(value) => setFormData({ ...formData, win: value })}
                                                     >
-                                                        Add Parlay
-                                                    </Button>
-                                                </>
+                                                        <SelectTrigger id="win">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                                            <SelectItem value="true" className="hover:bg-gray-100 cursor-pointer">Win</SelectItem>
+                                                            <SelectItem value="false" className="hover:bg-gray-100 cursor-pointer">Loss</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="flex flex-col justify-end">
+                                                    {formData.win === "true" ? (
+                                                        <>
+                                                            <Label htmlFor="payout">Payout (USD)</Label>
+                                                            <Input
+                                                                type="number"
+                                                                step="0.01"
+                                                                id="payout"
+                                                                name="payout"
+                                                                value={formData.payout}
+                                                                onChange={handleInputChange}
+                                                                required={formData.win === "true"}
+                                                            />
+                                                            <Button
+                                                                type="submit"
+                                                                className="bg-green-500 hover:bg-green-600 mt-2"
+                                                            >
+                                                                Add Parlay
+                                                            </Button>
+                                                        </>
+                                                    ) : (
+                                                        <div className="flex flex-col justify-end h-full">
+                                                            <Button
+                                                                type="submit"
+                                                                className="bg-green-500 hover:bg-green-600"
+                                                            >
+                                                                Add Parlay
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </form>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Parlays List */}
+                                <div className="flex justify-center">
+                                    <div className="w-2/3">
+                                        <div className="mb-4">
+                                            <h3 className="text-lg font-semibold text-gray-900">Your Parlays</h3>
+                                        </div>
+                                        <div className="space-y-4">
+                                            {parlaysToShow.length === 0 ? (
+                                                <div className="text-center py-8 text-gray-500">
+                                                    <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                                    <p>No parlays yet. Add your first parlay above!</p>
+                                                </div>
                                             ) : (
-                                                <div className="flex flex-col justify-end h-full">
+                                                parlaysToShow.map((parlay) => (
+                                                    <div key={parlay.id} className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
+                                                        <div className="flex justify-between items-start">
+                                                            <div className="flex-1">
+                                                                {/* Top row: Date, Legs, Amount */}
+                                                                <div className="flex items-center space-x-4 mb-2">
+                                                                    <span className="text-sm text-gray-500">
+                                                                        {new Date(parlay.date).toLocaleDateString()}
+                                                                    </span>
+                                                                    <span className="text-sm text-gray-600">
+                                                                        <span className="font-medium">{parlay.num_legs}</span> legs
+                                                                    </span>
+                                                                    <span className="text-sm text-gray-600">
+                                                                        {formatCurrency(parseFloat(parlay.money_spent))}
+                                                                    </span>
+                                                                </div>
+                                                                {/* Bottom row: Win/Loss and Payout/Loss Amount */}
+                                                                <div className="flex items-center space-x-4">
+                                                                    <Badge variant={parlay.win ? "default" : "secondary"}>
+                                                                        {parlay.win ? "Win" : "Loss"}
+                                                                    </Badge>
+                                                                    {parlay.win ? (
+                                                                        <span className="text-sm text-green-600 font-medium">
+                                                                            +{formatCurrency(parseFloat(parlay.payout || 0))}
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-sm text-red-600 font-medium">
+                                                                            -{formatCurrency(parseFloat(parlay.money_spent || 0))}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex space-x-2 ml-4">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => handleEditClick(parlay)}
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => handleRemove(parlay.id)}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                            {parlays.length > 5 && (
+                                                <div className="flex justify-center">
                                                     <Button
-                                                        type="submit"
-                                                        className="bg-green-500 hover:bg-green-600"
+                                                        variant="outline"
+                                                        onClick={() => setShowAllParlays(!showAllParlays)}
+                                                        className="mt-2 hover:bg-gray-200"
                                                     >
-                                                        Add Parlay
+                                                        {showAllParlays ? "Show Less" : "Show All"}
                                                     </Button>
                                                 </div>
                                             )}
                                         </div>
-                                    </form>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Parlays List */}
-                        <div className="flex justify-center">
-                            <Card className="w-2/3">
-                                <CardHeader>
-                                    <CardTitle>Your Parlays</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        {parlaysToShow.length === 0 ? (
-                                            <div className="text-center py-8 text-gray-500">
-                                                <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                                                <p>No parlays yet. Add your first parlay above!</p>
-                                            </div>
-                                        ) : (
-                                            parlaysToShow.map((parlay) => (
-                                                <div key={parlay.id} className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
-                                                    <div className="flex justify-between items-start">
-                                                        <div className="flex-1">
-                                                            {/* Top row: Date, Legs, Amount */}
-                                                            <div className="flex items-center space-x-4 mb-2">
-                                                                <span className="text-sm text-gray-500">
-                                                                    {new Date(parlay.date).toLocaleDateString()}
-                                                                </span>
-                                                                <span className="text-sm text-gray-600">
-                                                                    <span className="font-medium">{parlay.num_legs}</span> legs
-                                                                </span>
-                                                                <span className="text-sm text-gray-600">
-                                                                    {formatCurrency(parseFloat(parlay.money_spent))}
-                                                                </span>
-                                                            </div>
-                                                            {/* Bottom row: Win/Loss and Payout/Loss Amount */}
-                                                            <div className="flex items-center space-x-4">
-                                                                <Badge variant={parlay.win ? "default" : "secondary"}>
-                                                                    {parlay.win ? "Win" : "Loss"}
-                                                                </Badge>
-                                                                {parlay.win ? (
-                                                                    <span className="text-sm text-green-600 font-medium">
-                                                                        +{formatCurrency(parseFloat(parlay.payout || 0))}
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="text-sm text-red-600 font-medium">
-                                                                        -{formatCurrency(parseFloat(parlay.money_spent || 0))}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex space-x-2 ml-4">
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                onClick={() => handleEditClick(parlay)}
-                                                            >
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                onClick={() => handleRemove(parlay.id)}
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
-                                        {parlays.length > 5 && (
-                                            <div className="flex justify-center">
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => setShowAllParlays(!showAllParlays)}
-                                                    className="mt-4 hover:bg-gray-200"
-                                                >
-                                                    {showAllParlays ? "Show Less" : "Show All"}
-                                                </Button>
-                                            </div>
-                                        )}
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </TabsContent>
 
                     {/* Analytics Tab */}
                     <TabsContent value="analytics" className="space-y-6">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Leg Distribution Pie Chart */}
-                            <Card>
+                            <Card className="bg-white">
                                 <CardHeader>
                                     <div className="flex justify-between items-center">
                                         <CardTitle>Leg Distribution</CardTitle>
@@ -698,7 +704,7 @@ const HomePage = () => {
                             </Card>
 
                             {/* Monthly/Daily Spending Chart */}
-                            <Card>
+                            <Card className="bg-white">
                                 <CardHeader>
                                     <div className="flex justify-between items-center">
                                         <CardTitle>
@@ -751,7 +757,7 @@ const HomePage = () => {
                             </Card>
 
                             {/* Combined Trend Chart */}
-                            <Card className="lg:col-span-2">
+                            <Card className="lg:col-span-2 bg-white">
                                 <CardHeader>
                                     <div className="flex justify-between items-center">
                                         <CardTitle>
