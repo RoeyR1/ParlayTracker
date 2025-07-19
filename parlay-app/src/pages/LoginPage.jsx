@@ -17,6 +17,7 @@ const LoginPage = () => {
             const data = await response.json();
             if (data.token) {
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
                 navigate('/home');
             } else {
                 alert('Google login failed.');

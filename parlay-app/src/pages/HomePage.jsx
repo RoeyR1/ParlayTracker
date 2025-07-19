@@ -41,6 +41,8 @@ const HomePage = () => {
     const [trendChartType, setTrendChartType] = useState("winRate");
     const [selectedMonth, setSelectedMonth] = useState(null);
     const [showAllParlays, setShowAllParlays] = useState(false);
+    const [user, setUser] = useState(null);
+    const [spendingChartView, setSpendingChartView] = useState("risked"); // "risked" or "profit"
     const navigate = useNavigate();
 
 
@@ -48,8 +50,12 @@ const HomePage = () => {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
+        const userData = localStorage.getItem('user');
+
         if (!token) {
             navigate('/login');
+        } else if (userData) {
+            setUser(JSON.parse(userData));
         }
     }, [navigate]);
 
@@ -76,6 +82,7 @@ const HomePage = () => {
 
     const handleLogout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         navigate('/login');
     };
 
@@ -236,6 +243,11 @@ const HomePage = () => {
             return acc;
         }, {});
 
+        // Calculate profit/loss for each month
+        Object.values(monthlyData).forEach(month => {
+            month.profit = month.payout - month.spent;
+        });
+
         // Calculate cumulative win rate and profit over time
         let cumulativeWins = 0;
         let cumulativeLosses = 0;
@@ -313,12 +325,20 @@ const HomePage = () => {
         const dailyData = monthParlays.reduce((acc, parlay) => {
             const day = new Date(parlay.date).getDate();
             if (!acc[day]) {
-                acc[day] = { day, spent: 0, count: 0 };
+                acc[day] = { day, spent: 0, payout: 0, count: 0 };
             }
             acc[day].spent += parseFloat(parlay.money_spent || 0);
+            if (parlay.win) {
+                acc[day].payout += parseFloat(parlay.payout || 0);
+            }
             acc[day].count += 1;
             return acc;
         }, {});
+
+        // Calculate profit/loss for each day
+        Object.values(dailyData).forEach(day => {
+            day.profit = day.payout - day.spent;
+        });
 
         // Convert to array and sort by day
         return Object.values(dailyData).sort((a, b) => a.day - b.day);
@@ -357,15 +377,24 @@ const HomePage = () => {
                             <h1 className="text-2xl font-bold text-gray-900">Parlay Tracker</h1>
                         </div>
 
-                        {/* TODO: Add user profile/avatar here */}
-                        <Button
-                            variant="outline"
-                            onClick={handleLogout}
-                            className="flex items-center space-x-2 hover:bg-gray-200"
-                        >
-                            <LogOut className="h-4 w-4" />
-                            <span>Logout</span>
-                        </Button>
+                        <div className="flex items-center space-x-4">
+                            {user && (
+                                <span className="text-gray-700 font-semibold text-lg">
+                                    Hello, {user.username.split(' ')[0]}!
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="flex items-center">
+                            <Button
+                                variant="outline"
+                                onClick={handleLogout}
+                                className="flex items-center space-x-2 hover:bg-gray-200"
+                            >
+                                <LogOut className="h-4 w-4" />
+                                <span>Logout</span>
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -481,6 +510,17 @@ const HomePage = () => {
                                                     />
                                                 </div>
                                                 <div>
+                                                    <Label htmlFor="num_legs">Number of Legs</Label>
+                                                    <Input
+                                                        type="number"
+                                                        id="num_legs"
+                                                        name="num_legs"
+                                                        value={formData.num_legs}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
                                                     <Label htmlFor="money_spent">Amount (USD)</Label>
                                                     <Input
                                                         type="number"
@@ -488,17 +528,6 @@ const HomePage = () => {
                                                         id="money_spent"
                                                         name="money_spent"
                                                         value={formData.money_spent}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label htmlFor="num_legs">Number of Legs</Label>
-                                                    <Input
-                                                        type="number"
-                                                        id="num_legs"
-                                                        name="num_legs"
-                                                        value={formData.num_legs}
                                                         onChange={handleInputChange}
                                                         required
                                                     />
@@ -572,7 +601,6 @@ const HomePage = () => {
                                                     <div key={parlay.id} className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
                                                         <div className="flex justify-between items-start">
                                                             <div className="flex-1">
-                                                                {/* Top row: Date, Legs, Amount */}
                                                                 <div className="flex items-center space-x-4 mb-2">
                                                                     <span className="text-sm text-gray-500">
                                                                         {new Date(parlay.date).toLocaleDateString()}
@@ -584,7 +612,6 @@ const HomePage = () => {
                                                                         {formatCurrency(parseFloat(parlay.money_spent))}
                                                                     </span>
                                                                 </div>
-                                                                {/* Bottom row: Win/Loss and Payout/Loss Amount */}
                                                                 <div className="flex items-center space-x-4">
                                                                     <Badge variant={parlay.win ? "default" : "secondary"}>
                                                                         {parlay.win ? "Win" : "Loss"}
@@ -650,7 +677,7 @@ const HomePage = () => {
                                             value={legDistributionFilter}
                                             onValueChange={setLegDistributionFilter}
                                         >
-                                            <SelectTrigger className="w-32">
+                                            <SelectTrigger className="w-32 hover:bg-gray-200">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white border border-gray-200 shadow-lg">
@@ -682,7 +709,7 @@ const HomePage = () => {
                                         </PieChart>
                                     </ResponsiveContainer>
 
-                                    {/* Average Legs Text */}
+                                    {/* Average Legs*/}
                                     <div className="absolute bottom-0 left-0 p-4">
                                         {legDistributionFilter === "all" && (
                                             <p className="text-sm text-gray-600 font-medium">
@@ -707,9 +734,22 @@ const HomePage = () => {
                             <Card className="bg-white">
                                 <CardHeader>
                                     <div className="flex justify-between items-center">
-                                        <CardTitle>
-                                            {selectedMonth ? `Daily Risked - ${selectedMonth}` : "Monthly Risked"}
-                                        </CardTitle>
+                                        <div className="flex items-center space-x-4">
+                                            <CardTitle>
+                                                {selectedMonth
+                                                    ? `Daily ${spendingChartView === "risked" ? "Risked" : "Profit/Loss"} - ${selectedMonth}`
+                                                    : `Monthly ${spendingChartView === "risked" ? "Risked" : "Profit/Loss"}`
+                                                }
+                                            </CardTitle>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setSpendingChartView(spendingChartView === "risked" ? "profit" : "risked")}
+                                                className="hover:bg-gray-200"
+                                            >
+                                                View {spendingChartView === "risked" ? "Profit/Loss" : "Risked"}
+                                            </Button>
+                                        </div>
                                         {selectedMonth && (
                                             <Button
                                                 variant="outline"
@@ -736,7 +776,12 @@ const HomePage = () => {
                                             <XAxis dataKey={selectedMonth ? "day" : "month"} />
                                             <YAxis />
                                             <Tooltip
-                                                formatter={(value) => [`Risked: ${formatCurrency(value)}`]}
+                                                formatter={(value, name) => {
+                                                    if (spendingChartView === "profit") {
+                                                        return [`${name === "profit" ? "Profit/Loss" : name}: ${formatCurrency(value)}`];
+                                                    }
+                                                    return [`Risked: ${formatCurrency(value)}`];
+                                                }}
                                                 labelFormatter={(label) => {
                                                     if (selectedMonth) {
                                                         // Extract month name from selectedMonth (e.g., "Jul 2025" -> "Jul")
@@ -747,10 +792,17 @@ const HomePage = () => {
                                                 }}
                                             />
                                             <Bar
-                                                dataKey="spent"
+                                                dataKey={spendingChartView === "profit" ? "profit" : "spent"}
                                                 fill="#3b82f6"
                                                 style={{ cursor: selectedMonth ? 'default' : 'pointer' }}
-                                            />
+                                            >
+                                                {spendingChartView === "profit" && (selectedMonth ? getDailySpendingData(selectedMonth) : chartData).map((entry, index) => (
+                                                    <Cell
+                                                        key={`cell-${index}`}
+                                                        fill={entry.profit >= 0 ? "#10b981" : "#ef4444"}
+                                                    />
+                                                ))}
+                                            </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </CardContent>
@@ -767,7 +819,7 @@ const HomePage = () => {
                                             value={trendChartType}
                                             onValueChange={setTrendChartType}
                                         >
-                                            <SelectTrigger className="w-32">
+                                            <SelectTrigger className="w-32 hover:bg-gray-200">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white border border-gray-200 shadow-lg">
