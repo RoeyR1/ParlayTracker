@@ -157,7 +157,7 @@ const AnalyticsTab = ({
                 </ResponsiveContainer>
             </CardContent>
         </Card>
-        {/* Combined Trend Chart */}
+        {/* Profit/Win Rate Trend Chart */}
         <Card className="lg:col-span-2 bg-white">
             <CardHeader>
                 <div className="flex justify-between items-center">

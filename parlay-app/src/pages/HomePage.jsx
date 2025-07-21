@@ -19,7 +19,7 @@ import UpdateParlayDialog from "../components/UpdateParlayDialog";
 import AnalyticsTab from "../components/AnalyticsTab";
 
 const HomePage = () => {
-    // State management
+
     const [parlays, setParlays] = useState([]);
     const [formData, setFormData] = useState({
         date: "",
@@ -42,7 +42,6 @@ const HomePage = () => {
     const navigate = useNavigate();
 
 
-    // TODO: Add better error handling and user feedback
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -342,7 +341,6 @@ const HomePage = () => {
 
     // Load data on component mount
     useEffect(() => {
-        // TODO: Add authentication check here
         fetchParlays();
     }, []);
 
@@ -365,7 +363,7 @@ const HomePage = () => {
             {/* Header */}
             <header className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-12">
+                    <div className="flex justify-between items-center h-12 relative">
                         <div className="flex items-center space-x-3">
                             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
                                 <Target className="h-6 w-6 text-white" />
@@ -373,13 +371,12 @@ const HomePage = () => {
                             <h1 className="text-2xl font-bold text-gray-900">Parlay Tracker</h1>
                         </div>
 
-                        <div className="flex items-center space-x-4">
-                            {user && (
-                                <span className="text-gray-700 font-semibold text-lg">
-                                    Hello, {user.username.split(' ')[0]}!
-                                </span>
-                            )}
-                        </div>
+
+                        {user && (
+                            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-700 font-semibold text-lg whitespace-nowrap">
+                                Hello, {user.username.split(' ')[0]}!
+                            </span>
+                        )}
 
                         <div className="flex items-center">
                             <Button
