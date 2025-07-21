@@ -12,16 +12,12 @@ import { Separator } from "@/components/ui/separator";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { Trash2, Edit, TrendingUp, TrendingDown, DollarSign, Target, Calendar, LogOut, Plus, BarChart3 } from 'lucide-react';
 import { toast } from "sonner";
-/*
-TODOS:
-Keep adding parlay modal open 
-Make Parlay viewing page easier to read.
-Change monthly spending chart to monthly P/L
-Finish w/l line chart to show win rate history over time
-Add Legs breakdown Pie chart and Legs Per Win pie chart breakdown (show avg legs/win)
+import ParlayStats from "../components/ParlayStats";
+import ParlayForm from "../components/ParlayForm";
+import ParlayList from "../components/ParlayList";
+import UpdateParlayDialog from "../components/UpdateParlayDialog";
+import AnalyticsTab from "../components/AnalyticsTab";
 
-
-*/
 const HomePage = () => {
     // State management
     const [parlays, setParlays] = useState([]);
@@ -417,550 +413,57 @@ const HomePage = () => {
                         <Card className="bg-white border-0 shadow-lg mb-8">
                             <CardContent className="pt-4 pb-4 px-6 space-y-4">
                                 {/* Quick Stats */}
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                                        <CardContent className="p-6">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-blue-100">Total Risked</p>
-                                                    <p className="text-2xl font-bold">{formatCurrency(stats.totalSpent)}</p>
-                                                </div>
-                                                <DollarSign className="h-8 w-8 text-blue-200" />
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-
-                                    <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-                                        <CardContent className="p-6">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-green-100">Win Rate</p>
-                                                    <p className="text-2xl font-bold">{stats.winRate.toFixed(1)}%</p>
-                                                </div>
-                                                <TrendingUp className="h-8 w-8 text-green-200" />
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-
-                                    <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-                                        <CardContent className="p-6">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-purple-100">Total Parlays</p>
-                                                    <p className="text-2xl font-bold">{parlays.length}</p>
-                                                </div>
-                                                <Target className="h-8 w-8 text-purple-200" />
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-
-                                    <Card className={`bg-gradient-to-r ${stats.totalProfit >= 0 ? 'from-emerald-500 to-emerald-600' : 'from-red-500 to-red-600'} text-white`}>
-                                        <CardContent className="p-6">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-white/80">Net Profit</p>
-                                                    <p className="text-2xl font-bold">{formatCurrency(stats.totalProfit)}</p>
-                                                </div>
-                                                {stats.totalProfit >= 0 ?
-                                                    <TrendingUp className="h-8 w-8 text-white/80" /> :
-                                                    <TrendingDown className="h-8 w-8 text-white/80" />
-                                                }
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-
+                                <ParlayStats stats={stats} parlays={parlays} formatCurrency={formatCurrency} />
                                 {/* Add New Parlay Section */}
-                                <div className="space-y-4 flex justify-center mb-2">
-                                    <div className="w-2/3">
-                                        <div className="flex justify-start items-center mb-4">
-                                            <Button
-                                                onClick={() => setShowInlineForm(!showInlineForm)}
-                                                variant="default"
-                                                className={`flex items-center space-x-2 ${showInlineForm ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
-                                                    }`}
-                                            >
-                                                {showInlineForm ? (
-                                                    <>
-                                                        <span>Cancel</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Plus className="h-4 w-4" />
-                                                        <span>Add New Parlay</span>
-                                                    </>
-                                                )}
-                                            </Button>
-                                        </div>
-
-                                        {showInlineForm && (
-                                            <form
-                                                onSubmit={handleSubmit}
-                                                className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-lg shadow-sm bg-white"
-                                            >
-                                                <div>
-                                                    <Label htmlFor="date">Date</Label>
-                                                    <Input
-                                                        type="date"
-                                                        id="date"
-                                                        name="date"
-                                                        value={formData.date}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label htmlFor="num_legs">Number of Legs</Label>
-                                                    <Input
-                                                        type="number"
-                                                        id="num_legs"
-                                                        name="num_legs"
-                                                        value={formData.num_legs}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label htmlFor="money_spent">Amount (USD)</Label>
-                                                    <Input
-                                                        type="number"
-                                                        step="0.01"
-                                                        id="money_spent"
-                                                        name="money_spent"
-                                                        value={formData.money_spent}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label htmlFor="win">Result</Label>
-                                                    <Select
-                                                        name="win"
-                                                        value={formData.win}
-                                                        onValueChange={(value) => setFormData({ ...formData, win: value })}
-                                                    >
-                                                        <SelectTrigger id="win">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                                                            <SelectItem value="true" className="hover:bg-gray-100 cursor-pointer">Win</SelectItem>
-                                                            <SelectItem value="false" className="hover:bg-gray-100 cursor-pointer">Loss</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div className="flex flex-col justify-end">
-                                                    {formData.win === "true" ? (
-                                                        <>
-                                                            <Label htmlFor="payout">Payout (USD)</Label>
-                                                            <Input
-                                                                type="number"
-                                                                step="0.01"
-                                                                id="payout"
-                                                                name="payout"
-                                                                value={formData.payout}
-                                                                onChange={handleInputChange}
-                                                                required={formData.win === "true"}
-                                                            />
-                                                            <Button
-                                                                type="submit"
-                                                                className="bg-green-500 hover:bg-green-600 mt-2"
-                                                            >
-                                                                Add Parlay
-                                                            </Button>
-                                                        </>
-                                                    ) : (
-                                                        <div className="flex flex-col justify-end h-full">
-                                                            <Button
-                                                                type="submit"
-                                                                className="bg-green-500 hover:bg-green-600"
-                                                            >
-                                                                Add Parlay
-                                                            </Button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </form>
-                                        )}
-                                    </div>
-                                </div>
-
+                                <ParlayForm
+                                    formData={formData}
+                                    showInlineForm={showInlineForm}
+                                    setShowInlineForm={setShowInlineForm}
+                                    handleInputChange={handleInputChange}
+                                    handleSubmit={handleSubmit}
+                                    setFormData={setFormData}
+                                />
                                 {/* Parlays List */}
-                                <div className="flex justify-center">
-                                    <div className="w-2/3">
-                                        <div className="mb-4">
-                                            <h3 className="text-lg font-semibold text-gray-900">Your Parlays</h3>
-                                        </div>
-                                        <div className="space-y-4">
-                                            {parlaysToShow.length === 0 ? (
-                                                <div className="text-center py-8 text-gray-500">
-                                                    <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                                                    <p>No parlays yet. Add your first parlay above!</p>
-                                                </div>
-                                            ) : (
-                                                parlaysToShow.map((parlay) => (
-                                                    <div key={parlay.id} className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
-                                                        <div className="flex justify-between items-start">
-                                                            <div className="flex-1">
-                                                                <div className="flex items-center space-x-4 mb-2">
-                                                                    <span className="text-sm text-gray-500">
-                                                                        {new Date(parlay.date).toLocaleDateString()}
-                                                                    </span>
-                                                                    <span className="text-sm text-gray-600">
-                                                                        <span className="font-medium">{parlay.num_legs}</span> legs
-                                                                    </span>
-                                                                    <span className="text-sm text-gray-600">
-                                                                        {formatCurrency(parseFloat(parlay.money_spent))}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="flex items-center space-x-4">
-                                                                    <Badge variant={parlay.win ? "default" : "secondary"}>
-                                                                        {parlay.win ? "Win" : "Loss"}
-                                                                    </Badge>
-                                                                    {parlay.win ? (
-                                                                        <span className="text-sm text-green-600 font-medium">
-                                                                            +{formatCurrency(parseFloat(parlay.payout || 0))}
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-sm text-red-600 font-medium">
-                                                                            -{formatCurrency(parseFloat(parlay.money_spent || 0))}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex space-x-2 ml-4">
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={() => handleEditClick(parlay)}
-                                                                >
-                                                                    <Edit className="h-4 w-4" />
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={() => handleRemove(parlay.id)}
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                            {parlays.length > 5 && (
-                                                <div className="flex justify-center">
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={() => setShowAllParlays(!showAllParlays)}
-                                                        className="mt-2 hover:bg-gray-200"
-                                                    >
-                                                        {showAllParlays ? "Show Less" : "Show All"}
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
+                                <ParlayList
+                                    parlaysToShow={parlaysToShow}
+                                    parlays={parlays}
+                                    showAllParlays={showAllParlays}
+                                    setShowAllParlays={setShowAllParlays}
+                                    handleEditClick={handleEditClick}
+                                    handleRemove={handleRemove}
+                                    formatCurrency={formatCurrency}
+                                />
                             </CardContent>
                         </Card>
                     </TabsContent>
-
                     {/* Analytics Tab */}
                     <TabsContent value="analytics" className="space-y-6">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Leg Distribution Pie Chart */}
-                            <Card className="bg-white">
-                                <CardHeader>
-                                    <div className="flex justify-between items-center">
-                                        <CardTitle>Leg Distribution</CardTitle>
-                                        <Select
-                                            value={legDistributionFilter}
-                                            onValueChange={setLegDistributionFilter}
-                                        >
-                                            <SelectTrigger className="w-32 hover:bg-gray-200">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                                                <SelectItem value="all" className="hover:bg-gray-100 cursor-pointer">All Parlays</SelectItem>
-                                                <SelectItem value="wins" className="hover:bg-gray-100 cursor-pointer">Wins Only</SelectItem>
-                                                <SelectItem value="losses" className="hover:bg-gray-100 cursor-pointer">Losses Only</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="relative">
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <PieChart>
-                                            <Pie
-                                                data={pieData}
-                                                cx="50%"
-                                                cy="50%"
-                                                labelLine={false}
-                                                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                                                outerRadius={80}
-                                                fill="#8884d8"
-                                                dataKey="value"
-                                            >
-                                                {pieData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip formatter={(value, name) => [`${name}: ${value} parlays`]} />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-
-                                    {/* Average Legs*/}
-                                    <div className="absolute bottom-0 left-0 p-4">
-                                        {legDistributionFilter === "all" && (
-                                            <p className="text-sm text-gray-600 font-medium">
-                                                Average Legs: {getAverageLegs()}
-                                            </p>
-                                        )}
-                                        {legDistributionFilter === "wins" && (
-                                            <p className="text-sm text-gray-600 font-medium">
-                                                Average Legs per Win: {getAverageLegs()}
-                                            </p>
-                                        )}
-                                        {legDistributionFilter === "losses" && (
-                                            <p className="text-sm text-gray-600 font-medium">
-                                                Average Legs per Loss: {getAverageLegs()}
-                                            </p>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Monthly/Daily Spending Chart */}
-                            <Card className="bg-white">
-                                <CardHeader>
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex items-center space-x-4">
-                                            <CardTitle>
-                                                {selectedMonth
-                                                    ? `Daily ${spendingChartView === "risked" ? "Risked" : "Profit/Loss"} - ${selectedMonth}`
-                                                    : `Monthly ${spendingChartView === "risked" ? "Risked" : "Profit/Loss"}`
-                                                }
-                                            </CardTitle>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setSpendingChartView(spendingChartView === "risked" ? "profit" : "risked")}
-                                                className="hover:bg-gray-200"
-                                            >
-                                                View {spendingChartView === "risked" ? "Profit/Loss" : "Risked"}
-                                            </Button>
-                                        </div>
-                                        {selectedMonth && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setSelectedMonth(null)}
-                                                className="flex items-center space-x-2 hover:bg-gray-200"
-                                            >
-                                                <span>← Back</span>
-                                            </Button>
-                                        )}
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <BarChart
-                                            data={selectedMonth ? getDailySpendingData(selectedMonth) : chartData}
-                                            onClick={(data) => {
-                                                if (!selectedMonth && data && data.activeLabel) {
-                                                    setSelectedMonth(data.activeLabel);
-                                                }
-                                            }}
-                                        >
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey={selectedMonth ? "day" : "month"} />
-                                            <YAxis />
-                                            <Tooltip
-                                                formatter={(value, name) => {
-                                                    if (spendingChartView === "profit") {
-                                                        return [`${name === "profit" ? "Profit/Loss" : name}: ${formatCurrency(value)}`];
-                                                    }
-                                                    return [`Risked: ${formatCurrency(value)}`];
-                                                }}
-                                                labelFormatter={(label) => {
-                                                    if (selectedMonth) {
-                                                        // Extract month name from selectedMonth (e.g., "Jul 2025" -> "Jul")
-                                                        const monthName = selectedMonth.split(' ')[0];
-                                                        return `${monthName} ${label}`;
-                                                    }
-                                                    return label;
-                                                }}
-                                            />
-                                            <Bar
-                                                dataKey={spendingChartView === "profit" ? "profit" : "spent"}
-                                                fill="#3b82f6"
-                                                style={{ cursor: selectedMonth ? 'default' : 'pointer' }}
-                                            >
-                                                {spendingChartView === "profit" && (selectedMonth ? getDailySpendingData(selectedMonth) : chartData).map((entry, index) => (
-                                                    <Cell
-                                                        key={`cell-${index}`}
-                                                        fill={entry.profit >= 0 ? "#10b981" : "#ef4444"}
-                                                    />
-                                                ))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
-
-                            {/* Combined Trend Chart */}
-                            <Card className="lg:col-span-2 bg-white">
-                                <CardHeader>
-                                    <div className="flex justify-between items-center">
-                                        <CardTitle>
-                                            {trendChartType === "winRate" ? "Win Rate Trend" : "Profit Trend"}
-                                        </CardTitle>
-                                        <Select
-                                            value={trendChartType}
-                                            onValueChange={setTrendChartType}
-                                        >
-                                            <SelectTrigger className="w-32 hover:bg-gray-200">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                                                <SelectItem value="winRate" className="hover:bg-gray-100 cursor-pointer">Win Rate</SelectItem>
-                                                <SelectItem value="profit" className="hover:bg-gray-100 cursor-pointer">Profit</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <LineChart data={chartData}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="month" />
-                                            <YAxis
-                                                domain={trendChartType === "winRate" ? [0, 100] : undefined}
-                                            />
-                                            <Tooltip
-                                                formatter={(value, name, props) => {
-                                                    const currentMonth = props.payload.month;
-                                                    const firstMonth = chartData[0]?.month;
-                                                    const dateRange = firstMonth === currentMonth ? currentMonth : `${firstMonth} - ${currentMonth}`;
-                                                    const label = trendChartType === "winRate" ? 'Win Rate' : 'Cumulative Profit';
-                                                    const formattedValue = trendChartType === "winRate"
-                                                        ? `${value.toFixed(1)}%`
-                                                        : formatCurrency(value);
-
-                                                    return [
-                                                        <div>
-                                                            <div>{dateRange}</div>
-                                                            <div>{label}: {formattedValue}</div>
-                                                        </div>
-                                                    ];
-                                                }}
-                                            />
-                                            <Line
-                                                type="monotone"
-                                                dataKey={trendChartType === "winRate" ? "winRate" : "cumulativeProfit"}
-                                                stroke={trendChartType === "winRate" ? "#10b981" : "#3b82f6"}
-                                                strokeWidth={3}
-                                            />
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
-                        </div>
+                        <AnalyticsTab
+                            legDistributionFilter={legDistributionFilter}
+                            setLegDistributionFilter={setLegDistributionFilter}
+                            pieData={pieData}
+                            getAverageLegs={getAverageLegs}
+                            selectedMonth={selectedMonth}
+                            setSelectedMonth={setSelectedMonth}
+                            spendingChartView={spendingChartView}
+                            setSpendingChartView={setSpendingChartView}
+                            chartData={chartData}
+                            getDailySpendingData={getDailySpendingData}
+                            trendChartType={trendChartType}
+                            setTrendChartType={setTrendChartType}
+                            formatCurrency={formatCurrency}
+                        />
                     </TabsContent>
                 </Tabs>
 
                 {/* Update Parlay Modal */}
-                <Dialog open={isUpdatePopupOpen} onOpenChange={setIsUpdatePopupOpen}>
-                    <DialogOverlay className="bg-black/10" />
-                    <DialogContent className="bg-white p-6 rounded-lg">
-                        <DialogHeader>
-                            <DialogTitle>Edit Parlay</DialogTitle>
-                            <DialogDescription>
-                                Update the details of your selected parlay below. Change any field and click Save to update.
-                            </DialogDescription>
-                        </DialogHeader>
-                        {parlayToUpdate && (
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    handleUpdate(parlayToUpdate);
-                                }}
-                                className="space-y-4"
-                            >
-                                <div>
-                                    <Label htmlFor="update-date">Date</Label>
-                                    <Input
-                                        type="date"
-                                        id="update-date"
-                                        name="date"
-                                        value={parlayToUpdate.date}
-                                        onChange={handleUpdateInputChange}
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="update-money">Amount</Label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        id="update-money"
-                                        name="money_spent"
-                                        value={parlayToUpdate.money_spent}
-                                        onChange={handleUpdateInputChange}
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="update-legs">Number of Legs</Label>
-                                    <Input
-                                        type="number"
-                                        id="update-legs"
-                                        name="num_legs"
-                                        value={parlayToUpdate.num_legs}
-                                        onChange={handleUpdateInputChange}
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="update-win">Result</Label>
-                                    <select
-                                        name="win"
-                                        value={parlayToUpdate.win}
-                                        onChange={handleUpdateInputChange}
-                                        className="w-full p-2 border rounded dark:border-gray-600"
-                                    >
-                                        <option value="true">Win</option>
-                                        <option value="false">Loss</option>
-                                    </select>
-                                </div>
-                                {parlayToUpdate?.win === "true" && (
-                                    <div>
-                                        <Label htmlFor="update-payout">Payout (USD)</Label>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            id="update-payout"
-                                            name="payout"
-                                            value={parlayToUpdate.payout || ""}
-                                            onChange={handleUpdateInputChange}
-                                            required={parlayToUpdate.win === "true"}
-                                        />
-                                    </div>
-                                )}
-                                <div className="flex justify-end space-x-2">
-                                    <Button type="button"
-                                        className="bg-red-500 hover:bg-red-600"
-                                        onClick={() => setIsUpdatePopupOpen(false)}>
-                                        Cancel
-                                    </Button>
-                                    <Button type="submit"
-                                        className="bg-green-500 hover:bg-green-600"
-                                    >Save</Button>
-                                </div>
-                            </form>
-                        )}
-                    </DialogContent>
-                </Dialog>
+                <UpdateParlayDialog
+                    isUpdatePopupOpen={isUpdatePopupOpen}
+                    setIsUpdatePopupOpen={setIsUpdatePopupOpen}
+                    parlayToUpdate={parlayToUpdate}
+                    handleUpdate={handleUpdate}
+                    handleUpdateInputChange={handleUpdateInputChange}
+                />
             </div>
         </div>
     );
